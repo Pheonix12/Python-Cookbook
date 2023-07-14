@@ -4,7 +4,7 @@ from PyPDF2 import PdfReader
 import openai
 
 # OpenAI API credentials
-openai.api_key = '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'
+openai.api_key = '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'
 
 
 def extract_text_from_pdf(file_path):
@@ -18,9 +18,9 @@ def extract_text_from_pdf(file_path):
 
 def generate_summary(text):
     response = openai.Completion.create(
-        engine='text-davinci-003',
+        engine='gpt-3.5-turbo',
         prompt=f"Summarize the following text: {text}",
-        max_tokens=100,
+        max_tokens=1000,
         temperature=0.3,
         n=1,
         stop=None
