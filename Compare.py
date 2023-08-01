@@ -1,77 +1,71 @@
-import difflib
-import PyPDF2
 import tkinter as tk
-from tkinter import filedialog
+import langchain
 import openai
+import PyPDF2
 
-# Set up OpenAI API credentials
-openai.api_key = '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'
+def compare_pdfs(pdf_file1, pdf_file2):
+  """Compares two PDF files using LangChain and OpenAI.
 
-def extract_text_from_pdf(file_path):
-    with open(file_path, 'rb') as file:
-        pdf_reader = PyPDF2.PdfReader(file)
-        text = ''
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        return text
+  Args:
+    pdf_file1: The path to the first PDF file to compare.
+    pdf_file2: The path to the second PDF file to compare.
 
-def compare_pdf_files(file1, file2):
-    text1 = extract_text_from_pdf(file1)
-    text2 = extract_text_from_pdf(file2)
+  Returns:
+    The difference between the two PDF files.
+  """
 
-    #GPT-3.5 Turbo
-    prompt = f"Differences between {file1} and {file2}:"
-    input_text = prompt + '\n' + text1 + '\n' + text2
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=input_text,
-        max_tokens=100,
-        n=1,
-        stop=None,
-        temperature=0.5
-    )
-    comparison = response.choices[0].text.strip()
+  # Load the PDF files and extract the text.
+  pdf1 = PyPDF2.PdfFileReader(pdf_file1)
+  text1 = ""
+  for page in pdf1.pages:
+    text1 += page.extract_text()
 
-    return comparison
+  pdf2 = PyPDF2.PdfFileReader(pdf_file2)
+  text2 = ""
+  for page in pdf2.pages:
+    text2 += page.extract_text()
 
-def browse_file(label):
-    file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
-    label.config(text=file_path)
+  # Create a LangChain comparer.
+  comparer = langchain.ComparerChain()
 
-def compare_files():
-    file1 = label1.cget("text")
-    file2 = label2.cget("text")
+  # Compare the text of the two PDF files.
+  difference = comparer(text1, text2)
 
-    if file1 and file2:
-        differences = compare_pdf_files(file1, file2)
-        text_output.delete("1.0", tk.END)
-        text_output.insert(tk.END, differences)
-    else:
-        text_output.delete("1.0", tk.END)
-        text_output.insert(tk.END, "Please select two PDF files.")
+  return difference
 
-# Create main window
-window = tk.Tk()
-window.title("PDF Comparison Tool")
+def main():
+  root = tk.Tk()
+  root.title("PDF Comparer")
 
-# file selection buttons and labels
-label1 = tk.Label(window, text="")
-label1.pack()
-button1 = tk.Button(window, text="Select PDF File 1", command=lambda: browse_file(label1))
-button1.pack()
+  # Create a file dialog to select the first PDF file.
+  pdf_file1 = tk.filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
 
-label2 = tk.Label(window, text="")
-label2.pack()
-button2 = tk.Button(window, text="Select PDF File 2", command=lambda: browse_file(label2))
-button2.pack()
+  # Create a file dialog to select the second PDF file.
+  pdf_file2 = tk.filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
 
-#ompare button
-compare_button = tk.Button(window, text="Compare", command=compare_files)
-compare_button.pack()
+  # Create a button to compare the PDF files.
+  compare_button = tk.Button(root, text="Compare", command=lambda: compare(pdf_file1, pdf_file2))
 
-#output text box
-text_output = tk.Text(window, height=10, width=50)
-text_output.pack()
+  # Layout the widgets.
+  pdf_file1_label = tk.Label(root, text="First PDF file:")
+  pdf_file1_label.grid(row=0, column=0)
+  pdf_file1_entry = tk.Entry(root)
+  pdf_file1_entry.insert(0, pdf_file1)
+  pdf_file1_entry.grid(row=0, column=1)
 
+  pdf_file2_label = tk.Label(root, text="Second PDF file:")
+  pdf_file2_label.grid(row=1, column=0)
+  pdf_file2_entry = tk.Entry(root)
+  pdf_file2_entry.insert(0, pdf_file2)
+  pdf_file2_entry.grid(row=1, column=1)
 
-window.mainloop()
+  compare_button.grid(row=2, column=0, columnspan=2)
+
+  root.mainloop()
+
+def compare(pdf_file1, pdf_file2):
+  difference = compare_pdfs(pdf_file1, pdf_file2)
+  print(difference)
+
+if __name__ == "__main__":
+  main()

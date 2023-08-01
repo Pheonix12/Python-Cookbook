@@ -17,15 +17,16 @@ def extract_text_from_pdf(file_path):
 
 
 def generate_summary(text):
-    response = openai.Completion.create(
-        engine='gpt-3.5-turbo',
-        prompt=f"Summarize the following text: {text}",
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"Summarize the following text: {text}"},
+        ],
         max_tokens=1000,
         temperature=0.3,
-        n=1,
-        stop=None
     )
-    summary = response.choices[0].text.strip()
+    summary = response['choices'][0]['message']['content'].strip()
     return summary
 
 
